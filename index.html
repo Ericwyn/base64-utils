@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <title>Base64 To PDF</title>
+        <meta charset="UTF-8">
+        <meta name="description" content="一个将 base64 字符串直接转换为 PDF 并在线预览的工具。A web tool to convert base64 strings to PDF and preview them in the browser.">
+        <meta name="keywords" content="base64, pdf, converter, web tool">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="canonical" href="https://yourwebsite.com/base64-to-pdf">
+        <meta name="robots" content="index, follow">
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+        <style>
+            canvas {
+                border: 1px solid black;
+                margin: 10px;
+                max-width: 580px;
+                /* display: block; */
+            }
+            
+            .input-div {
+                margin: 10px;
+            }
+            
+            .btn-div {
+                display: flex;
+            }
+
+            .btn {
+                margin: 10px;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class="input-div">
+            <h1>Base64 To PDF</h1>
+            <p>source : https://github.com/Ericwyn/base64-to-pdf</p>
+        </div>
+        <div class="input-div">
+            <textarea id="base64Input" rows="15" cols="70" placeholder="请在此处输入 base64 编码数据 / Enter your base64 string here..."></textarea>
+        </div>
+        <div class="btn-div">
+            <button class="btn" id="convertButton">转换 / Convert</button>
+            <button class="btn" id="downloadButton" style="display: none;">下载 / Download PDFs</button>    
+        </div>
+
+        <div id="pdfViewer"></div>
+
+    </body>
+    <script>
+        var loadingTask;
+        var pdfDoc;
+        var scale = 2.0;  // Increase this value to increase resolution
+
+        function renderPage(num) {
+            pdfDoc.getPage(num).then(function(page) {
+                
+
+                var canvas = document.createElement('canvas');
+                var ctx = canvas.getContext('2d');
+                var viewport = page.getViewport({scale: scale});
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                var renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport
+                };
+                var renderTask = page.render(renderContext);
+                document.getElementById('pdfViewer').appendChild(canvas);
+            });
+        }
+
+        function onDocumentLoaded(_pdfDoc) {
+            pdfDoc = _pdfDoc;
+            document.getElementById('pdfViewer').innerHTML = '';
+            for (var num = 1; num <= pdfDoc.numPages; num++) {
+                renderPage(num);
+            }
+            document.getElementById('downloadButton').style.display = 'block';
+        }
+
+        document.getElementById('convertButton').addEventListener('click', function() {
+            var base64 = document.getElementById('base64Input').value;
+            try {
+                var uint8Array = atob(base64).split('').map(function(c) {
+                    return c.charCodeAt(0);
+                });
+                if (loadingTask) {
+                    loadingTask.destroy().then(function () {
+                        loadingTask = pdfjsLib.getDocument({data: uint8Array});
+                        loadingTask.promise.then(onDocumentLoaded, function (reason) {
+                            alert('Error: ' + reason);
+                        });
+                    });
+                } else {
+                    loadingTask = pdfjsLib.getDocument({data: uint8Array});
+                    loadingTask.promise.then(onDocumentLoaded, function (reason) {
+                        alert('Error: ' + reason);
+                    });
+                }
+            } catch (e) {
+                alert('base64 数据异常, 无法装换' + e);
+            }
+        });
+
+        document.getElementById('downloadButton').addEventListener('click', function() {
+            var base64 = document.getElementById('base64Input').value;
+            var link = document.createElement('a');
+            link.href = 'data:application/pdf;base64,' + base64;
+            link.download = 'document.pdf';
+            link.click();
+        });
+    </script>
+    </html>
+    
