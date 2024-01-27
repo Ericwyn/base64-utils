@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Base64 To Image Converter</title>
+    <meta charset="UTF-8">
+    <style>
+        img {
+            border: 1px solid black;
+            margin: 10px;
+            max-width: 580px;
+        }
+
+        .input-div, .select-div {
+            margin: 10px;
+        }
+
+        .btn-div {
+            display: flex;
+        }
+
+        .btn {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="input-div">
+    <h1>Base64 Utils - Base64 To PDF</h1>
+    <p>source : <a href="https://github.com/Ericwyn/base64-utils">https://github.com/Ericwyn/base64-utils</a></p>
+    <br>
+    <p>Base64 To PDF <a href="https://ericwyn.github.io/base64-utils/pdf-convert.html">https://ericwyn.github.io/base64-utils/pdf-convert.html</a></p>
+    <p>Base64 To Image <a href="https://ericwyn.github.io/base64-utils/pic-convert.html">https://ericwyn.github.io/base64-utils/pic-convert.html</a></p>
+    <br>
+</div>
+<div class="input-div">
+    <textarea id="base64Input" rows="15" cols="70" placeholder="请在此处输入 base64 编码数据 / Enter your base64 string here..."></textarea>
+</div>
+<div class="select-div">
+    <label for="imageType">图片类型 / Image Type:</label>
+    <select id="imageType">
+        <option value="">请选择 / Please Select</option>
+        <option value="data:image/jpeg;base64,">JPEG</option>
+        <option value="data:image/png;base64,">PNG</option>
+        <option value="data:image/gif;base64,">GIF</option>
+    </select>
+</div>
+<div class="btn-div">
+    <button class="btn" id="convertButton">转换 / Convert</button>
+    <button class="btn" id="downloadButton" style="display: none;">下载 / Download Image</button>
+</div>
+
+<div id="imageViewer"></div>
+
+<script>
+    document.getElementById('base64Input').addEventListener('input', function() {
+        var base64 = this.value.trim();
+        var imageTypeSelect = document.getElementById('imageType');
+        if (base64.startsWith('data:image/jpeg;base64,')) {
+            imageTypeSelect.value = 'data:image/jpeg;base64,';
+        } else if (base64.startsWith('data:image/png;base64,')) {
+            imageTypeSelect.value = 'data:image/png;base64,';
+        } else if (base64.startsWith('data:image/gif;base64,')) {
+            imageTypeSelect.value = 'data:image/gif;base64,';
+        } else {
+            imageTypeSelect.value = ''; // 如果无法识别，则重置选择
+        }
+    });
+
+    document.getElementById('convertButton').addEventListener('click', function() {
+        var base64 = document.getElementById('base64Input').value.trim();
+        var selectedType = document.getElementById('imageType').value;
+        if (!selectedType) {
+            alert('请选择图片类型或输入包含类型前缀的 base64 字符串。');
+            return;
+        }
+        if (!base64.startsWith('data:image/')) {
+            base64 = selectedType + base64;
+        }
+        var img = document.createElement('img');
+        img.src = base64;
+        document.getElementById('imageViewer').innerHTML = ''; // 清空之前的内容
+        document.getElementById('imageViewer').appendChild(img);
+        document.getElementById('downloadButton').style.display = 'block'; // 显示下载按钮
+    });
+
+    document.getElementById('downloadButton').addEventListener('click', function() {
+        var base64 = document.getElementById('base64Input').value.trim();
+        var selectedType = document.getElementById('imageType').value;
+        var link = document.createElement('a');
+        link.href = base64;
+        var filename = 'downloaded_image';
+        if (selectedType.includes('jpeg')) {
+            filename += '.jpg';
+        } else if (selectedType.includes('png')) {
+            filename += '.png';
+        } else if (selectedType.includes('gif')) {
+            filename += '.gif';
+        } else {
+            filename += '.png'; // 默认使用 PNG
+        }
+        link.download = filename;
+        document.body.appendChild(link); // 修复在某些浏览器中不触发下载的问题
+        link.click();
+        document.body.removeChild(link); // 清理
+    });
+</script>
+</body>
+</html>
